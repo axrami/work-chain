@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "allowUnreachableCode"             : false,
+    "allowUnusedLabels"                : true,
+    "forceConsistentCasingInFileNames" : true,
+    "module"                           : "commonjs",
+    "noEmitOnError"                    : true,
+    "noFallthroughCasesInSwitch"       : true,
+    "noImplicitReturns"                : true,
+    "noImplicitUseStrict"              : false,
+    "noUnusedLocals"                   : false,
+    "noUnusedParameters"               : false,
+    "pretty"                           : true,
+    "removeComments"                   : false,
+    "inlineSources"                    : true,
+    "inlineSourceMap"                  : true,
+    "target"                           : "es2017",
+    "declaration"                      : true,
+    "experimentalDecorators"           : true,
+    "noImplicitAny"                    : false,
+    "strict"                           : true,
+    "outDir"                           :"dist/"
+  },
+  "include": [
+    "index.ts",
+    "./src/**/*"
+  ]
+}

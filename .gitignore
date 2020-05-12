@@ -1,0 +1,28 @@
+dist/
+logs/
+node_modules/
+target/
+node_modules.tar.bz2
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IntelliJ Files
+.idea/*
+.idea
+.DS_Store
+
+*.iml
+
+# Coverage Report Files
+tmp/
+.nyc_output/
+coverage/*
+
+# VS Code Files
+.vscode/
+coverage/
