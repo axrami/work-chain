@@ -1,3 +1,7 @@
-import {Executor} from "./src/executor";
+export {
+    Executor
+} from "./src/executor";
 
-export default Executor;
+export {
+    Work
+} from "./src/types";

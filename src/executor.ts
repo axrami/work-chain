@@ -5,6 +5,7 @@ import {DebugLogger, DefaultLogger, ILogger}    from "./logger";
 export type ExecutorParams = {
     logger          ?: ILogger;
     retry           ?: number;
+    module          ?: string;
     debug           ?: boolean;
     errorWithValue  ?: boolean;
 }
@@ -17,7 +18,7 @@ export class Executor {
     private activeWork              : number;
 
     constructor(params ?: ExecutorParams) {
-        this.module = '[Executor]';
+        this.module = params?.module || '[Executor]';
         this.activeWork = 0;
         this.retryDefault = params?.retry || 0;
         this.errorWithValue = params?.errorWithValue || false;

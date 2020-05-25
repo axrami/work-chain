@@ -9,8 +9,9 @@
     "email": "ramirez.andrew@gmail.com"
   },
   "scripts": {
-    "dev" : "./node_modules/typescript/bin/tsc --watch --project ./tsconfig.json",
-    "compile": "rm -rf ./dist && ./node_modules/typescript/bin/tsc --project ./tsconfig.json"
+    "dev": "./node_modules/typescript/bin/tsc --watch --project ./tsconfig.json",
+    "compile": "rm -rf ./dist && ./node_modules/typescript/bin/tsc --project ./tsconfig.json",
+    "test": "./node_modules/mocha/bin/mocha ./dist/src/test/executor.spec.js"
   },
   "dependencies": {},
   "devDependencies": {
