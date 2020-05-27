@@ -1,5 +1,6 @@
 {
   "name": "work-chain",
+  "description": "Simple structure for async tasks",
   "version": "1.0.1",
   "main": "dist/index.js",
   "license": "MIT",
@@ -8,6 +9,11 @@
     "name": "Andrew Ramirez",
     "email": "ramirez.andrew@gmail.com"
   },
+    "repository": {
+    "type": "git",
+    "url": "https://github.com/axrami/work-chain"
+  },
+  "readme": "README.md",
   "scripts": {
     "dev": "./node_modules/typescript/bin/tsc --watch --project ./tsconfig.json",
     "compile": "rm -rf ./dist && ./node_modules/typescript/bin/tsc --project ./tsconfig.json",
@@ -15,11 +21,11 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/chai": "^4.2.11",
-    "@types/mocha": "^7.0.2",
-    "chai": "^4.2.0",
-    "mocha": "^7.1.1",
-    "typescript": "^3.8.3"
+    "@types/chai": "4.2.11",
+    "@types/mocha": "7.0.2",
+    "chai": "4.2.0",
+    "mocha": "7.1.1",
+    "typescript": "3.8.3"
   },
   "exclude": [
     "**/test/*",
