@@ -1,7 +1,7 @@
 {
   "name": "work-chain",
   "description": "Simple structure for async tasks",
-  "version": "1.0.2",
+  "version": "1.0.13",
   "main": "dist/index.js",
   "license": "MIT",
   "types": "./dist/index.d.ts",
@@ -16,8 +16,9 @@
   "readme": "README.md",
   "scripts": {
     "dev": "./node_modules/typescript/bin/tsc --watch --project ./tsconfig.json",
-    "compile": "rm -rf ./dist && ./node_modules/typescript/bin/tsc --project ./tsconfig.json",
-    "test": "./node_modules/mocha/bin/mocha ./dist/src/test/executor.spec.js"
+    "compile": "yarn compile_typescript",
+    "compile_typescript": "tsc --version && tsc",
+    "test": "./node_modules/mocha/bin/mocha ./dist/test/executor.spec.js --timeout 4000"
   },
   "dependencies": {},
   "devDependencies": {

@@ -1,4 +1,4 @@
-import {Work} from "./types";
+import {Work} from "../models/types";
 
 export const assignWork = ({work, nextWork}: {
     work      ?: Work;

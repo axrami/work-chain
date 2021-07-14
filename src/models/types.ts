@@ -7,11 +7,14 @@ export type Work = {
     tasks   ?: Work[]; // Runnables
     retry   ?: number;
     id      ?: string;
+    initialDelay   ?: number;
+    retryDelay     ?: (x : number) => number;
 }
 
 export type WorkInternal = Work & {
     retry : number;
     id    : string;
+    attempted : number;
 }
 
 // export type WorkSignature = ({work, options}) => Work;

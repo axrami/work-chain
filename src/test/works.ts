@@ -1,5 +1,5 @@
-import {Work} from "../types";
-import {assignWork} from "../helpers";
+import {Work} from "../models/types";
+import {assignWork} from "../utils/helpers";
 import TestMethods from "./methods";
 
 export namespace TestWork {

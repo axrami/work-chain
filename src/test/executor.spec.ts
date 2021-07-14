@@ -1,8 +1,9 @@
 import {assert} from "chai";
 import {Executor} from "../executor";
-import {Work} from "../types";
-import {assignWork} from "../helpers";
+import {Work} from "../models/types";
+import {assignWork} from "../utils/helpers";
 import TestWork from "./works";
+import {NoRetryError} from "../models/error";
 
 const executor = new Executor();
 // const execute = executor.submit;
@@ -135,6 +136,110 @@ describe('Executor', () => {
             };
             const result = await executor.submit(work);
             assert.equal(result.retryCounter, retries);
+        });
+
+        it('includes initial delay', (done) => {
+            let isDone = false;
+            const work = {
+                name : 'work-with-delay',
+                func : () => {
+                    isDone = true;
+                    return Promise.resolve(true);
+                },
+                initialDelay : 1000
+            }
+            executor.submit(work);
+            setTimeout(() => {
+                assert.equal(isDone, false);
+            }, 500);
+            setTimeout(() => {
+                assert.equal(isDone, true);
+                done()
+            }, 1500);
+        });
+
+        it('includes retry delay', (done) => {
+            let callCount = 0;
+            const startTime = Date.now();
+            const work = {
+                name : 'work-with-delay',
+                retry : 2,
+                retryDelay : (x) => {
+                    assert.equal(callCount, x);
+                    return x * 500;
+                },
+                func : () => {
+                    callCount++;
+                    throw new Error("failed");
+                },
+                error : {
+                    name : 'work-retry-delay',
+                    func : (params) => {
+                        assert.equal(callCount, 3);
+                        const endTime = Date.now();
+                        const processTime = endTime - startTime;
+                        if (processTime < 1500) {
+                            assert.fail("too fast, retry delay not taken");
+                        }
+                        done();
+                        return Promise.resolve(params);
+                    }
+                }
+            }
+            executor.submit(work);
+        });
+
+        it('continues chain after no retry error', (done) => {
+            let callCount = 0;
+            const errorMsg = 'failed no retry';
+            const work = {
+                name : 'work-with-delay',
+                retry : 2,
+                func : () => {
+                    callCount++;
+                    throw new NoRetryError(errorMsg);
+                },
+                next : {
+                    name : 'no-retry-next',
+                    func : () => {
+                        assert.fail('error handler not called');
+                    }
+                },
+                error : {
+                    name : 'work-retry-delay',
+                    func : (params) => {
+                        const {error} = params;
+                        assert.equal(callCount, 1);
+                        assert.equal(error.message, errorMsg);
+                        done();
+                        return Promise.resolve({eject : true});
+                    }
+                }
+            }
+            executor.submit(work);
+        });
+
+        it("ensure tasks values are properly passed to next work", async () => {
+            const myStrs = ['dog', 'cat', 'bird'];
+            const tasks : Work[] = myStrs.map(str => {
+                return {
+                    name : "workFor:" + str,
+                    func : params => {
+                        const val = params.val;
+                        assert(val, str);
+                        assert(params.foo, "foo");
+                        return Promise.resolve(params);
+                    },
+                    value : {val : str}
+                }
+            });
+            const work = {
+                name : "work",
+                func : () => Promise.resolve({foo : "foo"}),
+                tasks
+            };
+            await executor.submit(work);
+            return;
         });
 
         // TODO: FIX TEST

@@ -1,10 +1,12 @@
-import {Work, WorkInternal}                     from "./types";
-import {assignWork, linkChain, uuid}            from "./helpers";
-import {DebugLogger, DefaultLogger, ILogger}    from "./logger";
+import {Work, WorkInternal}                     from "./models/types";
+import {assignWork, linkChain, uuid}            from "./utils/helpers";
+import {DebugLogger, DefaultLogger, ILogger}    from "./utils/logger";
+import {NoRetryError} from "./models/error";
 
 export type ExecutorParams = {
     logger          ?: ILogger;
     retry           ?: number;
+    retryDelay      ?: (x: number) => number;
     module          ?: string;
     debug           ?: boolean;
     errorWithValue  ?: boolean;
@@ -13,6 +15,7 @@ export type ExecutorParams = {
 export class Executor {
     private readonly module         : string;
     private readonly retryDefault   : number;
+    private readonly retryDelay    ?: (x : number) => number;
     private readonly log            : ILogger;
     private readonly errorWithValue : boolean;
     private activeWork              : number;
@@ -22,20 +25,35 @@ export class Executor {
         this.activeWork = 0;
         this.retryDefault = params?.retry || 0;
         this.errorWithValue = params?.errorWithValue || false;
+        this.retryDelay = params?.retryDelay;
         this.log = params?.debug ? (params?.logger || DebugLogger) : DefaultLogger;
     }
 
-    public async submit(work : Work | Work[]) {
-        const workToRun = Array.isArray(work) ? linkChain(work) : work;
-        this.activeWork++; // TODO: support queue size definition
-        workToRun.retry = workToRun.retry || this.retryDefault;
-        workToRun.id = workToRun.id || uuid();
-        return this.run(workToRun as WorkInternal);
+    private async timeout(time) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve();
+            }, time);
+        });
     }
 
-    public static assignWork = assignWork;
+    public async submit(work : Work | Work[]) {
+        const submittedWork : Work = Array.isArray(work) ? linkChain(work) : work;
+        const workToRun : WorkInternal = {
+            ...submittedWork,
+            attempted : 0,
+            id : submittedWork.id|| uuid(),
+            retry : submittedWork.retry || this.retryDefault
+        }
+        if (workToRun.initialDelay) {
+            await this.timeout(workToRun.initialDelay);
+        }
+        return this.run(workToRun);
+    }
 
-    public static linkChain = linkChain;
+    public assignWork = assignWork;
+
+    public linkChain = linkChain;
 
     private async run(work : WorkInternal) {
         const workToExecute = work;
@@ -43,7 +61,8 @@ export class Executor {
         const name = workToExecute.name;
         const id = workToExecute.id;
         try {
-            this.log.debug(`${this.module} job begin, name:${name}, id:${id}`);
+            work.attempted++;
+            this.log.debug(`${this.module} job begin, name:${name}, id:${id}, attempt:${work.attempted}`);
             const value = Object.assign({}, await workToExecute.func(arg));
             this.activeWork--;
             this.log.debug(`${this.module} job complete, name:${name}, id:${id}`);
@@ -58,7 +77,7 @@ export class Executor {
                 delete value.tasks;
                 tasks.forEach((task: Work) => {
                     this.log.debug(`${this.module} submitting task next task:${work.name}, name:${name}, id:${id}`);
-                    task.value = value;
+                    task.value = {...task.value, ...value};
                     task.id = id;
                     this.submit(task); // fire and forget
                 });
@@ -73,9 +92,18 @@ export class Executor {
                 return value;
             }
         } catch (error) {
-            this.log.error(`${this.module} job failed with error:${error.mesage}, name:${name}, id:${id}`);
-            if (workToExecute.retry > 1) {
+            this.log.error(`${this.module} job failed with error:${error.message}, name:${name}, id:${id}`);
+            const isNoRetry = error instanceof NoRetryError;
+            if (isNoRetry) {
+                this.log.debug(`error of type no retry. ignoring retries:${workToExecute.retry}, with attempts:${workToExecute.attempted}`);
+            }
+            if (workToExecute.retry > 0 && !isNoRetry) {
                 workToExecute.retry--;
+                const retryDelayFunc = workToExecute.retryDelay || this.retryDelay;
+                if (retryDelayFunc) {
+                    const retryDelay = retryDelayFunc(workToExecute.attempted);
+                    await this.timeout(Number.isInteger(retryDelay) ? retryDelay : 0);
+                }
                 this.log.debug(`${this.module} job retrying remaining attempts:${workToExecute.retry}, name:${name}, id:${id}`);
                 return this.run(workToExecute);
             }
@@ -91,12 +119,9 @@ export class Executor {
                 this.activeWork--;
                 return this.submit(workToExecute.error);
             }
+            // Work failed all retries, drop and log
             this.activeWork--;
-            this.log.error(`${this.module} FATAL job failed, name:${name}, id:${id}`);
-            if (this.errorWithValue) {
-                error.workValue = workToExecute.value;
-            }
-            throw error;
+            this.log.error(`${this.module} FATAL job failed, name:${name}, id:${id}, message:${error.message}`);
         }
     }
 }
