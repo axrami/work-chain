@@ -4,6 +4,8 @@ A Small functional approach to abstracting asynchronous operations in an easy sc
 ## Features
 * Provides structure in executing promises / async functions
 
+## Goal
+To provide a structure to handle complex async behaviors. As an example you (1)receive a request, then you (2)call an api to enrich the data, but it fails, so you (3)retry, but it still fails, instead you need to (4)reference the database for that data, now you need to use the data from either the api or database to (5)update another service. This becomes challenging to represent in code. This is an attempt to organize your retries, error handlers, and order of events.
 
 ## Development
 Install deps
