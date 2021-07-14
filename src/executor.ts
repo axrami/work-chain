@@ -1,7 +1,7 @@
 import {Work, WorkInternal}                     from "./models/types";
 import {assignWork, linkChain, uuid}            from "./utils/helpers";
 import {DebugLogger, DefaultLogger, ILogger}    from "./utils/logger";
-import {NoRetryError} from "./models/error";
+import {NoRetryError}                           from "./models/error";
 
 export type ExecutorParams = {
     logger          ?: ILogger;
